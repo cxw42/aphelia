@@ -1,0 +1,6 @@
+*.o
+aphelia
+*.swp
+*.bak
+*~
+~*
