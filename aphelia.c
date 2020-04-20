@@ -9,8 +9,8 @@ int main(void) {
     XWindowAttributes attr;
     XButtonEvent start;
     XEvent ev;
-    Window foc;
-    int revert_to;
+    /*Window foc;*/
+    /*int revert_to;*/
 
     // Exit if display doesn't instantiate
     if(!(display = XOpenDisplay(0x0))) {
@@ -44,54 +44,54 @@ int main(void) {
     for(;;) {
 
         XNextEvent(display, &ev);
-	    XGetInputFocus(display, &foc, &revert_to);
-	XSync(display, False);
-	XSetInputFocus(display, PointerRoot, RevertToPointerRoot, CurrentTime);
-	    
-    	if(ev.type == KeyPress && ev.xbutton.subwindow != None) {
+        /*XGetInputFocus(display, &foc, &revert_to);*/
+        XSync(display, False);
+        XSetInputFocus(display, PointerRoot, RevertToPointerRoot, CurrentTime);
+        
+        if(ev.type == KeyPress && ev.xbutton.subwindow != None) {
 
             // Close window with mod+q
-    	    if(ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("q"))) {
-    	        XDestroyWindow(display, foc);
+            if(ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("q"))) {
+                XDestroyWindow(display, ev.xbutton.subwindow);
             }
 
             // Lower windows with mod+a
-    	    else if (ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("a"))) {
-                XLowerWindow(display, foc);
+            else if (ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("a"))) {
+                XLowerWindow(display, ev.xbutton.subwindow);
             }
 
             // Raise windows with mod+s
-    	    else if (ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("s"))) {
-                XRaiseWindow(display, foc);
+            else if (ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("s"))) {
+                XRaiseWindow(display, ev.xbutton.subwindow);
             }
-    	}
+        }
 
-    	if(ev.type == KeyPress) {
+        if(ev.type == KeyPress) {
 
             // Open simple terminal with mod+return
-    	    if(ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("Return"))) {
+            if(ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("Return"))) {
                 system("st &");
             }
 
             // Open dmenu with mod+d
-    	    if(ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("d"))) {
+            if(ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("d"))) {
                 system("dmenu_run");
             }
 
             // Close aphelia with mod+backspace
-    	    else if(ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("BackSpace"))) {
+            else if(ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("BackSpace"))) {
                 XCloseDisplay(display);
             }
-    	}
+        }
 
-    	if(ev.type == ButtonPress && ev.xbutton.subwindow != None) {
+        if(ev.type == ButtonPress && ev.xbutton.subwindow != None) {
 
-    	    XGetWindowAttributes(display, ev.xbutton.subwindow, &attr);
-    	    XSetInputFocus(display, ev.xbutton.subwindow, RevertToParent, CurrentTime);
-    	    start = ev.xbutton;
-    	}
+            XGetWindowAttributes(display, ev.xbutton.subwindow, &attr);
+            XSetInputFocus(display, ev.xbutton.subwindow, RevertToParent, CurrentTime);
+            start = ev.xbutton;
+        }
 
-    	else if(ev.type == MotionNotify && start.subwindow != None) {
+        else if(ev.type == MotionNotify && start.subwindow != None) {
 
             int xdiff = ev.xbutton.x_root - start.x_root;
             int ydiff = ev.xbutton.y_root - start.y_root;
@@ -102,7 +102,7 @@ int main(void) {
 
                 MAX(100, attr.width + (start.button==3 ? xdiff : 0)),
                 MAX(50, attr.height + (start.button==3 ? ydiff : 0)));
-    	}
+        }
 
         else if(ev.type == ButtonRelease) {
 
