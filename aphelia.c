@@ -1,7 +1,19 @@
+/*
+ * aphelia.c: single-file X11 window manager
+ * Copyright (c) 2018-2020 Jarred Vardy and contributors
+ * Portions Copyright (c) 2020 D3 Engineering, LLC.
+ * Licensed MIT; see accompanying LICENSE file for details.
+ */
+
 #include <X11/Xlib.h>
 #include <stdlib.h>
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+/**
+ * Find the top-level window for the given window
+ */
+Window get_top_level(Display *display, Window start);
 
 int main(void) {
 
@@ -9,6 +21,7 @@ int main(void) {
     XWindowAttributes attr;
     XButtonEvent start;
     XEvent ev;
+    Window win;
     /*Window foc;*/
     /*int revert_to;*/
 
@@ -47,22 +60,31 @@ int main(void) {
         /*XGetInputFocus(display, &foc, &revert_to);*/
         XSync(display, False);
         XSetInputFocus(display, PointerRoot, RevertToPointerRoot, CurrentTime);
-        
-        if(ev.type == KeyPress && ev.xbutton.subwindow != None) {
+
+        if(ev.type == KeyPress && ev.xkey.subwindow != None) {
 
             // Close window with mod+q
             if(ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("q"))) {
-                XDestroyWindow(display, ev.xbutton.subwindow);
+                win = get_top_level(display, ev.xkey.subwindow);
+                if(win != None) {
+                    XDestroyWindow(display, win);
+                }
             }
 
             // Lower windows with mod+a
             else if (ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("a"))) {
-                XLowerWindow(display, ev.xbutton.subwindow);
+                win = get_top_level(display, ev.xkey.subwindow);
+                if(win != None) {
+                    XLowerWindow(display, win);
+                }
             }
 
             // Raise windows with mod+s
             else if (ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("s"))) {
-                XRaiseWindow(display, ev.xbutton.subwindow);
+                win = get_top_level(display, ev.xkey.subwindow);
+                if(win != None) {
+                    XRaiseWindow(display, win);
+                }
             }
         }
 
@@ -81,6 +103,7 @@ int main(void) {
             // Close aphelia with mod+backspace
             else if(ev.xkey.keycode == XKeysymToKeycode(display, XStringToKeysym("BackSpace"))) {
                 XCloseDisplay(display);
+                break;
             }
         }
 
@@ -109,4 +132,29 @@ int main(void) {
             start.subwindow = None;
         }
     }
-}
+    return 0;
+} /*main*/
+
+Window get_top_level(Display *display, Window start)
+{
+    Window root = None, parent, curr = start;
+    Window *children;
+    unsigned int nchildren;
+    Status st;
+
+    while(curr && curr != None && curr != root) {
+        st = XQueryTree(display, curr, &root, &parent, &children, &nchildren);
+        if(!st) {
+            return None;
+        }
+        XFree(children);
+
+        if(root == parent) {
+            return curr;
+        }
+        curr = parent;
+    }
+
+    return None;
+} /*get_top_level*/
+
